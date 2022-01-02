@@ -1,11 +1,13 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <pthread.h>
 #include <semaphore.h>
 
 sem_t mutex, writeblock;
-int data = 0, rcount = 0;
+int data = 3000, rcount = 0;
 int nr = 0, nw = 0, i = 0;
 int r, w;
+int upper=20000,lower=-20000;
 pthread_t rtid[10000], wtid[10000];
 
 void *reader(void *arg)
@@ -17,7 +19,7 @@ void *reader(void *arg)
   if (rcount == 1)
     sem_wait(&writeblock);
   sem_post(&mutex);
-  printf("Data read by the reader%d is %d\n", f, data);
+  printf("Balance Enquiry  id : %d Available balance : %d\n", f, data);
   sleep(1);
   sem_wait(&mutex);
   rcount = rcount - 1;
@@ -28,11 +30,24 @@ void *reader(void *arg)
 
 void *writer(void *arg)
 {
-  int f;
+  int f,temp;
   f = ((int)arg);
   sem_wait(&writeblock);
-  data++;
-  printf("Data writen by the writer%d is %d\n", f, data);
+  temp=(rand() % (upper - lower + 1)) + lower;
+  printf("%d \n",temp);
+  if((data+temp)<0){
+    printf("Transaction id : %d  Transaction Failed.. Available balance is %d \n",f,data);
+  }
+  else{
+      printf("Transaction Success \n");
+      data=data+temp;
+      if(temp<=0){
+        printf("Transaction id : %d  Amount Debited : %d Available balance is %d \n", f,temp, data);
+      }
+      else{
+        printf("Transaction id : %d  Amount Credited : %d Available balance is %d \n", f,temp,data);  
+      }
+  }
   sleep(1);
   sem_post(&writeblock);
 }
@@ -60,7 +75,7 @@ int main()
 
   while (1)
   {
-    printf("enter number of readers and writers or -1 to exit: \n");
+    printf("enter number of Balance Enquiry and Transaction to perform or -1 to exit: \n");
     scanf("%d", &r);
     if (r == -1)
     {
